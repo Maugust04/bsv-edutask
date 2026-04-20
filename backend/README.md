@@ -10,3 +10,17 @@ Once all packages are installed, you can start the server from the root folder b
 > python ./main.py
 
 The server can then be accessed at http://localhost:5000. Note however that the database must be running in order for the server to function correctly.
+
+## How to change test coverage files
+
+Go in to 
+
+pytest.ini this:
+
+```py
+--cov=src.controllers.usercontroller
+
+change to 
+
+--cov=src.anyfile you wanna test
+```

@@ -3,6 +3,7 @@ from src.util.dao import DAO
 
 import re
 emailValidator = re.compile(r'.*@.*')
+# emailValidator = re.compile(r'.+@.+\..+')
 
 class UserController(Controller):
     def __init__(self, dao: DAO):
@@ -34,6 +35,7 @@ class UserController(Controller):
                 return users[0]
             else:
                 print(f'Error: more than one user found with mail {email}')
+                # This should not return if there is no user to return.
                 return users[0]
         except Exception as e:
             raise
