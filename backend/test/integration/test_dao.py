@@ -1,12 +1,30 @@
 import pytest
 import pymongo.errors
+from unittest.mock import patch
 
 from src.util.dao import DAO
+
+VALIDATOR = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["firstName", "lastName", "email"],
+        "properties": {
+            "firstName": {"bsonType": "string"},
+            "lastName": {"bsonType": "string"},
+            "email": {"bsonType": "string", "uniqueItems": True},
+            "tasks": {
+                "bsonType": "array",
+                "items": {"bsonType": "objectId"}
+            }
+        }
+    }
+}
 
 
 @pytest.fixture
 def dao():
-    test_dao = DAO('user')
+    with patch('src.util.dao.getValidator', return_value=VALIDATOR):
+        test_dao = DAO('user')
     yield test_dao
     test_dao.drop()
 
