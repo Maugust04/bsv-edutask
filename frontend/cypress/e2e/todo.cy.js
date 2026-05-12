@@ -1,11 +1,18 @@
 /**
- *  This is the file for testsing GUI 
- *  
+ *  E2E tests for R8 - Todo manipulation
+ *
  *  R8UC1 - Create todo
  *  TC-1: The user enters a description of a todo item into an empty input form field.
- *  TC-2: If the description is not empty and the user presses “Add”, the system creates a new todo item
+ *  TC-2: If the description is not empty and the user presses "Add", the system creates a new todo item.
+ *  TC-6: If the description is empty, the "Add" button remains disabled.
+ *
+ *  R8UC2 - Toggle todo
+ *  TC-3: The user clicks on an active todo item - it becomes done.
+ *  TC-4: The user clicks on a done todo item - it becomes active again.
+ *
+ *  R8UC3 - Delete todo
+ *  TC-5: If the user clicks on the x symbol, the todo item is deleted.
  */
-// cy.visit('http://localhost:3000')
 describe('R8 - Todo manipulation', () => {
     let uid
     let email
@@ -35,77 +42,77 @@ describe('R8 - Todo manipulation', () => {
     })
 
     beforeEach(function () {
-        cy.visit('http://localhost:3000')                   // open the app
-        cy.contains('div', 'Email Address')                 // find email input and type
+        cy.viewport(1280, 1500)
+        cy.visit('http://localhost:3000')
+        cy.contains('div', 'Email Address')
             .find('input[type=text]')
             .type(email)
-        cy.get('form').submit()                             // Login
-        cy.get('h1').should('contain.text', 'Your tasks')   //wait until the page is loaded
+        cy.get('form').submit()
+        cy.get('h1').should('contain.text', 'Your tasks')
     })
 
-    after(function () { // Removes the addded user after the test is done
+    after(function () {
         cy.request({ method: 'DELETE', url: `http://localhost:5000/tasks/byid/${taskid}` })
         cy.request({ method: 'DELETE', url: `http://localhost:5000/users/${uid}` })
     })
 
     it('TC-1: The user enters a description into the input field', () => {
-        cy.get('.container-element a').first().click() //open detail view
+        cy.get('.container-element a').first().click()
 
         cy.get('input[placeholder="Add a new todo item"]')
             .type('TC-1 todo item')
-            
+
         cy.get('input[placeholder="Add a new todo item"]')
             .should('have.value', 'TC-1 todo item')
     })
 
     it('TC-2: The user enters a description into the input field and adds it', () => {
-        cy.get('.container-element a').first().click() //open detail view
+        cy.get('.container-element a').first().click()
 
-        cy.get('input[placeholder="Add a new todo item"]') // find the description input field and type
+        cy.get('input[placeholder="Add a new todo item"]')
             .type('TC-2 todo item')
-            
-        cy.get('input[placeholder="Add a new todo item"]') // assert that the description input field contains the text we typed
+
+        cy.get('input[placeholder="Add a new todo item"]')
             .should('have.value', 'TC-2 todo item')
 
-        cy.get('input[type=submit][value=Add]') // find the add button and click
+        cy.get('input[type=submit][value=Add]')
             .click()
 
-        cy.contains('li', 'TC-2 todo item') // assert that a new todo item with the description we typed is now in the list of todo items
+        cy.contains('li', 'TC-2 todo item')
             .should('exist')
 
-        // I wanted to do a before each to rince it all but i dont know how to get it to work
-        // so for the sake of this assignment i did it like this.
+        // Two clicks required due to system defect in deleteTodo (see bug report)
         cy.contains('li', 'TC-2 todo item')
             .find('.remover')
             .click()
-            .click() // Read Bug report On assigment 2
-        
+            .click()
     })
 
-/**
- *  R8UC2 - Toggle todo
- *  TC-3: The user clicks on the icon in front of the description of the todo item. 
- *  TC-4: If the todo item was previously active, it is set to done.
- */
-// TC-3: Toggle from active to done
+    it('TC-6: Add button is disabled when the description is empty', () => {
+        cy.get('.container-element a').first().click()
+
+        cy.get('input[placeholder="Add a new todo item"]')
+            .should('have.value', '')
+
+        cy.get('input[type=submit][value=Add]')
+            .should('be.disabled')
+    })
+
     it('TC-3: User clicks on unchecked todo item - it becomes checked', () => {
         cy.get('.container-element a').first().click()
-        
+
         cy.get('input[placeholder="Add a new todo item"]')
             .type('TC-3 todo item')
         cy.get('input[type=submit][value=Add]').click()
-        
-        // Verify unchecked initially
+
         cy.contains('li', 'TC-3 todo item')
             .find('.checker')
             .should('have.class', 'unchecked')
-        
-        // Click to check
+
         cy.contains('li', 'TC-3 todo item')
             .find('.checker')
             .click()
-        
-        // Verify becomes checked
+
         cy.contains('li', 'TC-3 todo item')
             .find('.checker')
             .should('have.class', 'checked')
@@ -115,44 +122,34 @@ describe('R8 - Todo manipulation', () => {
             .click()
     })
 
-    // TC-4: Toggle from done back to active
     it('TC-4: User clicks on checked todo item - it becomes unchecked again', () => {
         cy.get('.container-element a').first().click()
-        
-        // Add and check a todo first
+
         cy.get('input[placeholder="Add a new todo item"]')
             .type('TC-4 todo item')
         cy.get('input[type=submit][value=Add]').click()
-        
-        cy.contains('li', 'TC-4 todo item')
-            .find('.checker')
-            .click()  // Check it
-        
-        cy.contains('li', 'TC-4 todo item')
-            .find('.checker')
-            .should('have.class', 'checked')
-        
-        // Now click again to uncheck (toggle back)
+
         cy.contains('li', 'TC-4 todo item')
             .find('.checker')
             .click()
-        
-        // Verify becomes unchecked again
+
+        cy.contains('li', 'TC-4 todo item')
+            .find('.checker')
+            .should('have.class', 'checked')
+
+        cy.contains('li', 'TC-4 todo item')
+            .find('.checker')
+            .click()
+
         cy.contains('li', 'TC-4 todo item')
             .find('.checker')
             .should('have.class', 'unchecked')
 
-        // Bug here there is no bug 
         cy.contains('li', 'TC-4 todo item')
             .find('.remover')
             .click()
     })
 
-// })
-/**
- *  R8UC3 - Delete todo
- *  TC-5: If user clicks on the x symbol behind the description of the todo item, the todo item is deleted 
- */
     it('TC-5: Todo item is removed from list when x is clicked', () => {
         cy.get('.container-element a').first().click()
 
@@ -160,15 +157,15 @@ describe('R8 - Todo manipulation', () => {
             .type('Test 5 todo item')
 
         cy.get('input[type=submit][value=Add]').click()
-        
+
         cy.contains('li', 'Test 5 todo item').should('exist')
 
+        // Two clicks required due to system defect in deleteTodo (see bug report)
         cy.contains('li', 'Test 5 todo item')
             .find('.remover')
             .click()
-            .click() // Read Bug report On assigment 2
-        
-        // Check for non-existence - might still fail if the delete didn't work
+            .click()
+
         cy.contains('li', 'Test 5 todo item').should('not.exist')
     })
 })
